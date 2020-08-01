@@ -52,12 +52,14 @@ fetch(
       .append("g")
       .attr("transform", `translate(0, ${h})`)
       .attr("class", "axis")
+      .attr("id", "x-axis")
       .call(d3.axisBottom(xScale));
 
     svg
       .append("g")
       .attr("transform", `translate(0, 0)`)
       .attr("class", "axis")
+      .attr("id", "y-axis")
       .call(d3.axisLeft(yScale).tickFormat(d3.timeFormat("%M:%S")));
 
     // Add dots
@@ -71,13 +73,15 @@ fetch(
       .attr("cx", (d) => xScale(parseYear(d.Year)))
       .attr("cy", (d) => yScale(d.Time))
       .attr("r", dotRadius)
+      .attr("data-xvalue", (d) => d.Year)
+      .attr("data-yvalue", (d) => d.Time)
       .attr("fill", (d) => {
         return d.Doping === "" ? colorNotDoping : colorDoping;
       })
 
       // Add tooltip display functions
 
-      .on("mouseover", function () {
+      .on("mouseover", function (d) {
         // Tooltip fade-in
 
         tooltip.transition().style("opacity", "1");
@@ -121,6 +125,7 @@ fetch(
       .select(".chart")
       .append("g")
       .style("opacity", "0")
+      .attr("id", "tooltip")
       .attr("class", "tooltip");
 
     // Add Legend element
@@ -132,7 +137,7 @@ fetch(
       { color: colorNotDoping, text: "Without doping" },
     ];
 
-    const legend = svg.append("g").attr("class", "legend");
+    const legend = svg.append("g").attr("class", "legend").attr("id", "legend");
 
     // Add legend colors
 
