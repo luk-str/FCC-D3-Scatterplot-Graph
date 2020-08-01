@@ -7,6 +7,7 @@ fetch(
     const margin = { top: 30, right: 50, bottom: 30, left: 60 };
     const w = 1000 - margin.left - margin.right;
     const h = 600 - margin.top - margin.bottom;
+    const dotRadius = 10;
 
     // Add main svg
     const svg = d3
@@ -53,10 +54,51 @@ fetch(
       .append("circle")
       .attr("cx", (d) => xScale(d.Year))
       .attr("cy", (d) => yScale(d.Seconds))
-      .attr("r", 10)
+      .attr("r", dotRadius)
       .attr("fill", (d) => {
         return d.Doping === ""
           ? "rgba(0, 0, 255, 0.5)"
           : "rgba(250, 30, 120, 0.5)";
+      })
+
+      // Add tooltip display functions
+
+      .on("mouseover", function () {
+        // Tooltip fade-in
+        tooltip.transition().style("opacity", "1");
+
+        // Dot zoom-in
+        d3.select(this)
+          .transition()
+          .attr("r", dotRadius * 1.5);
+      })
+      .on("mouseout", function () {
+        // Tooltip fade-out
+        tooltip.style("opacity", "0");
+
+        // Dot zoom-out
+        d3.select(this).transition().duration(500).attr("r", dotRadius);
+      })
+      .on("mousemove", function (d) {
+        // Tooltip position following mouse movement
+        tooltip
+          .style("left", d3.mouse(this)[0] + 80 + "px")
+          .style("top", d3.mouse(this)[1] + 80 + "px")
+
+          // Tooltip text
+          .html(
+            `Name: ${d.Name}<br>Country: ${d.Nationality}<br><br>Time: ${
+              d.Time
+            }<br>Year: ${d.Year}${
+              d.Doping !== "" ? `<br>Doping: ${d.Doping}` : ""
+            }`
+          );
       });
+
+    // Add tooltip element
+    const tooltip = d3
+      .select(".chart")
+      .append("g")
+      .style("opacity", "0")
+      .attr("class", "tooltip");
   });
