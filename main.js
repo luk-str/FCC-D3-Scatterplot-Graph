@@ -4,6 +4,7 @@ fetch(
   .then((response) => response.json())
   .then(function (data) {
     // Define measurements
+
     const margin = { top: 30, right: 50, bottom: 30, left: 60 };
     const w = 1000 - margin.left - margin.right;
     const h = 600 - margin.top - margin.bottom;
@@ -12,6 +13,7 @@ fetch(
     const colorNotDoping = "rgba(0, 0, 255, 0.5)";
 
     // Add main svg
+
     const svg = d3
       .select(".chart")
       .append("svg")
@@ -20,43 +22,54 @@ fetch(
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // Declare scales
+    // Add scales
+
+    const parseYear = d3.timeParse("%Y");
+    const timeFormat = d3.timeFormat("%M:%S");
+
+    data.forEach((d) => {
+      const parseTime = d.Time.split(":");
+      d.Time = new Date(1970, 0, 1, 0, parseTime[0], parseTime[1]);
+    });
+
     const xScale = d3
-      .scaleLinear()
+      .scaleTime()
       .domain([
-        d3.min(data, (d) => d.Year) - 1,
-        d3.max(data, (d) => d.Year) + 1,
+        parseYear(d3.min(data, (d) => d.Year - 1)),
+        parseYear(d3.max(data, (d) => d.Year + 1)),
       ])
       .range([0, w]);
 
     const yScale = d3
       .scaleLinear()
-      .domain([
-        d3.min(data, (d) => d.Seconds) - 10,
-        d3.max(data, (d) => d.Seconds) + 10,
-      ])
-      .range([0, h]);
+      .domain(d3.extent(data, (d) => d.Time))
+      .range([0, h])
+      .nice();
 
     // Add axes
+
     svg
       .append("g")
       .attr("transform", `translate(0, ${h})`)
+      .attr("class", "axis")
       .call(d3.axisBottom(xScale));
 
     svg
       .append("g")
       .attr("transform", `translate(0, 0)`)
-      .call(d3.axisLeft(yScale));
+      .attr("class", "axis")
+      .call(d3.axisLeft(yScale).tickFormat(d3.timeFormat("%M:%S")));
 
     // Add dots
+
     svg
       .selectAll("dot")
       .data(data)
       .enter()
       .append("circle")
       .attr("class", "dot")
-      .attr("cx", (d) => xScale(d.Year))
-      .attr("cy", (d) => yScale(d.Seconds))
+      .attr("cx", (d) => xScale(parseYear(d.Year)))
+      .attr("cy", (d) => yScale(d.Time))
       .attr("r", dotRadius)
       .attr("fill", (d) => {
         return d.Doping === "" ? colorNotDoping : colorDoping;
@@ -66,37 +79,44 @@ fetch(
 
       .on("mouseover", function () {
         // Tooltip fade-in
+
         tooltip.transition().style("opacity", "1");
 
         // Dot zoom-in
+
         d3.select(this)
           .transition()
           .attr("r", dotRadius * 1.5);
       })
       .on("mouseout", function () {
         // Tooltip fade-out
+
         tooltip.style("opacity", "0");
 
         // Dot zoom-out
+
         d3.select(this).transition().duration(500).attr("r", dotRadius);
       })
       .on("mousemove", function (d) {
         // Tooltip position following mouse movement
+
         tooltip
           .style("left", d3.mouse(this)[0] + 80 + "px")
           .style("top", d3.mouse(this)[1] + 80 + "px")
 
           // Tooltip text
+
           .html(
-            `Name: ${d.Name}<br>Country: ${d.Nationality}<br><br>Time: ${
-              d.Time
-            }<br>Year: ${d.Year}${
+            `Name: ${d.Name}<br>Country: ${
+              d.Nationality
+            }<br><br>Time: ${timeFormat(d.Time)}<br>Year: ${d.Year}${
               d.Doping !== "" ? `<br>Doping: ${d.Doping}` : ""
             }`
           );
       });
 
     // Add tooltip element
+
     const tooltip = d3
       .select(".chart")
       .append("g")
@@ -104,6 +124,7 @@ fetch(
       .attr("class", "tooltip");
 
     // Add Legend element
+
     const legendWidth = 40;
     const legendHeight = 20;
     const legendData = [
@@ -114,6 +135,7 @@ fetch(
     const legend = svg.append("g").attr("class", "legend");
 
     // Add legend colors
+
     legend
       .selectAll("rect")
       .data(legendData)
@@ -126,6 +148,7 @@ fetch(
       .attr("fill", (d) => d.color);
 
     // Add legend text labels
+
     legend
       .selectAll("text")
       .data(legendData)
