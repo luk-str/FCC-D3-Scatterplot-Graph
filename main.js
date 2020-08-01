@@ -8,6 +8,8 @@ fetch(
     const w = 1000 - margin.left - margin.right;
     const h = 600 - margin.top - margin.bottom;
     const dotRadius = 10;
+    const colorDoping = "rgba(250, 30, 120, 0.5)";
+    const colorNotDoping = "rgba(0, 0, 255, 0.5)";
 
     // Add main svg
     const svg = d3
@@ -52,13 +54,12 @@ fetch(
       .data(data)
       .enter()
       .append("circle")
+      .attr("class", "dot")
       .attr("cx", (d) => xScale(d.Year))
       .attr("cy", (d) => yScale(d.Seconds))
       .attr("r", dotRadius)
       .attr("fill", (d) => {
-        return d.Doping === ""
-          ? "rgba(0, 0, 255, 0.5)"
-          : "rgba(250, 30, 120, 0.5)";
+        return d.Doping === "" ? colorNotDoping : colorDoping;
       })
 
       // Add tooltip display functions
@@ -101,4 +102,36 @@ fetch(
       .append("g")
       .style("opacity", "0")
       .attr("class", "tooltip");
+
+    // Add Legend element
+    const legendWidth = 40;
+    const legendHeight = 20;
+    const legendData = [
+      { color: colorDoping, text: "With doping" },
+      { color: colorNotDoping, text: "Without doping" },
+    ];
+
+    const legend = svg.append("g").attr("class", "legend");
+
+    // Add legend colors
+    legend
+      .selectAll("rect")
+      .data(legendData)
+      .enter()
+      .append("rect")
+      .attr("width", legendWidth)
+      .attr("height", legendHeight)
+      .attr("x", w - margin.right - legendWidth - 50)
+      .attr("y", (d, i) => 20 + i * 25)
+      .attr("fill", (d) => d.color);
+
+    // Add legend text labels
+    legend
+      .selectAll("text")
+      .data(legendData)
+      .enter()
+      .append("text")
+      .text((d) => d.text)
+      .attr("x", w - margin.right - legendWidth)
+      .attr("y", (d, i) => 20 + (i + 0.6) * 25);
   });

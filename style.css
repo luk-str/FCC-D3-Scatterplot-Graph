@@ -16,6 +16,10 @@ body {
   background-color: rgb(245, 245, 245);
 }
 
+.dot:hover {
+  cursor: crosshair;
+}
+
 .title {
   font-size: 2em;
   font-weight: 700;
