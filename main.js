@@ -3,17 +3,26 @@ fetch(
 )
   .then((response) => response.json())
   .then(function (data) {
-    // Define measurements
-
+    // Define sizes
     const margin = { top: 30, right: 50, bottom: 30, left: 60 };
     const w = 1000 - margin.left - margin.right;
     const h = 600 - margin.top - margin.bottom;
     const dotRadius = 10;
+
+    // Define colors
     const colorDoping = "rgba(250, 30, 120, 0.5)";
     const colorNotDoping = "rgba(0, 0, 255, 0.5)";
 
-    // Add main svg
+    // Convert time format
+    const parseYear = d3.timeParse("%Y");
+    const timeFormat = d3.timeFormat("%M:%S");
 
+    data.forEach((d) => {
+      const parseTime = d.Time.split(":");
+      d.Time = new Date(1970, 0, 1, 0, parseTime[0], parseTime[1]);
+    });
+
+    // Add main svg elements
     const svg = d3
       .select(".chart")
       .append("svg")
@@ -23,15 +32,6 @@ fetch(
       .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
     // Add scales
-
-    const parseYear = d3.timeParse("%Y");
-    const timeFormat = d3.timeFormat("%M:%S");
-
-    data.forEach((d) => {
-      const parseTime = d.Time.split(":");
-      d.Time = new Date(1970, 0, 1, 0, parseTime[0], parseTime[1]);
-    });
-
     const xScale = d3
       .scaleTime()
       .domain([
@@ -47,7 +47,6 @@ fetch(
       .nice();
 
     // Add axes
-
     svg
       .append("g")
       .attr("transform", `translate(0, ${h})`)
@@ -63,7 +62,6 @@ fetch(
       .call(d3.axisLeft(yScale).tickFormat(d3.timeFormat("%M:%S")));
 
     // Add dots
-
     svg
       .selectAll("dot")
       .data(data)
@@ -79,37 +77,31 @@ fetch(
         return d.Doping === "" ? colorNotDoping : colorDoping;
       })
 
-      // Add tooltip display functions
-
+      // Add tooltip elements
       .on("mouseover", function (d) {
         // Tooltip fade-in
-
         tooltip.transition().style("opacity", "1");
+        tooltip.attr("data-year", d.Year);
 
         // Dot zoom-in
-
         d3.select(this)
           .transition()
           .attr("r", dotRadius * 1.5);
       })
       .on("mouseout", function () {
         // Tooltip fade-out
-
         tooltip.style("opacity", "0");
 
         // Dot zoom-out
-
         d3.select(this).transition().duration(500).attr("r", dotRadius);
       })
       .on("mousemove", function (d) {
         // Tooltip position following mouse movement
-
         tooltip
           .style("left", d3.mouse(this)[0] + 80 + "px")
           .style("top", d3.mouse(this)[1] + 80 + "px")
 
           // Tooltip text
-
           .html(
             `Name: ${d.Name}<br>Country: ${
               d.Nationality
@@ -120,7 +112,6 @@ fetch(
       });
 
     // Add tooltip element
-
     const tooltip = d3
       .select(".chart")
       .append("g")
@@ -128,8 +119,7 @@ fetch(
       .attr("id", "tooltip")
       .attr("class", "tooltip");
 
-    // Add Legend element
-
+    // Add Legend properties
     const legendWidth = 40;
     const legendHeight = 20;
     const legendData = [
@@ -137,10 +127,10 @@ fetch(
       { color: colorNotDoping, text: "Without doping" },
     ];
 
+    // Add legend group
     const legend = svg.append("g").attr("class", "legend").attr("id", "legend");
 
     // Add legend colors
-
     legend
       .selectAll("rect")
       .data(legendData)
@@ -153,7 +143,6 @@ fetch(
       .attr("fill", (d) => d.color);
 
     // Add legend text labels
-
     legend
       .selectAll("text")
       .data(legendData)
